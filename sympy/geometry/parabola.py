@@ -61,6 +61,22 @@ class Parabola(GeometrySet):
 
     """
 
+    def __contains__(self, o):
+        if isinstance(o, Point):
+            x = Dummy('x', real=True)
+            y = Dummy('y', real=True)
+
+            res = self.equation(x, y).subs({x: o.x, y: o.y})
+            return trigsimp(simplify(res)) is S.Zero
+        elif isinstance(o, Parabola):
+            return self == o
+        return False
+
+    def __eq__(self, o):
+        """Is the other GeometryEntity the same as this parabola?"""
+        return isinstance(o, Parabola) and (self.focus == o.focus and
+                                                  self.directrix in o.directrix)
+    
     def __new__(cls, focus=None, directrix=None, **kwargs):
 
         if focus:
