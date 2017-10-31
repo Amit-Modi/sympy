@@ -75,7 +75,7 @@ class Parabola(GeometrySet):
     def __eq__(self, o):
         """Is the other GeometryEntity the same as this parabola?"""
         return isinstance(o, Parabola) and (self.focus == o.focus and
-                                                  self.directrix in o.directrix)
+                                                  self.directrix.equals(o.directrix))
     
     def __new__(cls, focus=None, directrix=None, **kwargs):
 
@@ -86,9 +86,6 @@ class Parabola(GeometrySet):
 
         directrix = Line(directrix)
 
-        if (directrix.slope != 0 and directrix.slope != S.Infinity):
-            raise NotImplementedError('The directrix must be a horizontal'
-                                      ' or vertical line')
         if directrix.contains(focus):
             raise ValueError('The focus must not be a point of directrix')
 
@@ -231,14 +228,10 @@ class Parabola(GeometrySet):
         x = _symbol(x, real=True)
         y = _symbol(y, real=True)
 
-        if (self.axis_of_symmetry.slope == 0):
-            t1 = 4 * (self.p_parameter) * (x - self.vertex.x)
-            t2 = (y - self.vertex.y)**2
-        else:
-            t1 = 4 * (self.p_parameter) * (y - self.vertex.y)
-            t2 = (x - self.vertex.x)**2
-
-        return t1 - t2
+        angle = self.axis_of_symmetry.angle_between(Line((-1,0),(1,0)))
+        x,y = x-self.vertex.x, y-self.vertex.y
+        x,y = simplify(Point(x,y).rotate(angle).x), simplify(Point(x,y).rotate(angle).y)
+        return 4 * (self.p_parameter * x) - y**2
 
     @property
     def focal_length(self):
@@ -384,20 +377,11 @@ class Parabola(GeometrySet):
         -4
 
         """
-        if (self.axis_of_symmetry.slope == 0):
-            x = -(self.directrix.coefficients[2])
-            if (x < self.focus.args[0]):
-                p = self.focal_length
-            else:
-                p = -self.focal_length
-        else:
-            y = -(self.directrix.coefficients[2])
-            if (y > self.focus.args[1]):
-                p = -self.focal_length
-            else:
-                p = self.focal_length
-
-        return p
+        a,b,c=self.directrix.coefficients
+        result = simplify((a*self.focus.x + b*self.focus.y + c)/(2*sqrt(a**2+b**2)))
+        if a>0 or (a==0 and b>0):
+            return result
+        return -result
 
     @property
     def vertex(self):
@@ -422,10 +406,5 @@ class Parabola(GeometrySet):
         Point2D(0, 4)
 
         """
-        focus = self.focus
-        if (self.axis_of_symmetry.slope == 0):
-            vertex = Point(focus.args[0] - self.p_parameter, focus.args[1])
-        else:
-            vertex = Point(focus.args[0], focus.args[1] - self.p_parameter)
+        return self.directrix.projection(self.focus).midpoint(self.focus)
 
-        return vertex
