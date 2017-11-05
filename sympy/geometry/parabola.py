@@ -21,7 +21,7 @@ class Parabola(GeometrySet):
 
     A parabola is declared with a point, that is called 'focus', and
     a line, that is called 'directrix'.
-    Only vertical or horizontal parabolas are currently supported.
+    All parabolas including vertical or horizontal parabolas are currently supported.
 
     Parameters
     ==========
